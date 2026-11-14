@@ -2,7 +2,7 @@
 
 # ###################################### Definitions and constants #####################################################
 
-from qbencode.cube_repr.hkociemba_twophase.enums import Facelet as Fc, Color as Cl
+from hkociemba_twophase.enums import Facelet as Fc, Color as Cl
 
 # Map corner positions to facelet positions.
 cornerFacelet = [

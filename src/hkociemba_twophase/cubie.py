@@ -5,7 +5,7 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from qbencode.cube_repr.hkociemba_twophase.defs import (
+from hkociemba_twophase.defs import (
     cornerFacelet,
     edgeFacelet,
     cornerColor,
@@ -13,10 +13,10 @@ from qbencode.cube_repr.hkociemba_twophase.defs import (
     N_SYM,
 )
 
-from qbencode.cube_repr.hkociemba_twophase import face
+from hkociemba_twophase import face
 
-from qbencode.cube_repr.hkociemba_twophase.enums import Color, Corner as Co, Edge as Ed
-from qbencode.cube_repr.hkociemba_twophase.misc import c_nk, rotate_left, rotate_right
+from hkociemba_twophase.enums import Color, Corner as Co, Edge as Ed
+from hkociemba_twophase.misc import c_nk, rotate_left, rotate_right
 from random import randrange
 
 
@@ -306,7 +306,7 @@ class CubieCube:
 
     def symmetries(self):
         """Return a list of the symmetries and antisymmetries of the cubie cube."""
-        from qbencode.cube_repr.hkociemba_twophase.symmetries import (
+        from hkociemba_twophase.symmetries import (
             symCube,
             inv_idx,
         )  # not nice here but else we have circular imports
