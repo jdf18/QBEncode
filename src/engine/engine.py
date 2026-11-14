@@ -21,12 +21,14 @@ class Engine:
     def __init__(self) -> None:
         pass
 
-    def start(self) -> None:
+    def start(self, screen_dims) -> None:
         # pygame setup
         pygame.init()
-        self.screen = pygame.display.set_mode((1280, 720))
+        self.screen = pygame.display.set_mode(screen_dims)
         self.clock = pygame.time.Clock()
         self.running = True
+
+        self.dt = 1e-10
 
         self.camera = Camera()
         self.entities = []
