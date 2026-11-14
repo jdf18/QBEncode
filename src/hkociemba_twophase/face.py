@@ -1,14 +1,14 @@
 # ####### The cube at the facelet level is described by the positions of its colored stickers. ########################
 
-from qbencode.cube_repr.hkociemba_twophase import cubie
+from hkociemba_twophase import cubie
 
-from qbencode.cube_repr.hkociemba_twophase.defs import (
+from hkociemba_twophase.defs import (
     cornerColor,
     cornerFacelet,
     edgeColor,
     edgeFacelet,
 )
-from qbencode.cube_repr.hkociemba_twophase.enums import Color, Corner, Edge
+from hkociemba_twophase.enums import Color, Corner, Edge
 
 
 class FaceCube:
