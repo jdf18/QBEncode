@@ -2,8 +2,8 @@
 import os
 from os import path
 import array as ar
-import qbencode.cube_repr.hkociemba_twophase.cubie as cb
-from qbencode.cube_repr.hkociemba_twophase.defs import (
+import hkociemba_twophase.cubie as cb
+from hkociemba_twophase.defs import (
     N_TWIST,
     N_SYM,
     N_SYM_D4h,
@@ -16,7 +16,7 @@ from qbencode.cube_repr.hkociemba_twophase.defs import (
     N_CORNERS_CLASS,
     FOLDER,
 )
-from qbencode.cube_repr.hkociemba_twophase.enums import (
+from hkociemba_twophase.enums import (
     Corner as Co,
     Edge as Ed,
     Move as Mv,
