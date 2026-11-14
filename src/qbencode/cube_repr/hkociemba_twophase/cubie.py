@@ -1,3 +1,5 @@
+# Modified on 14/11/2026 by @jawadcode to solve type errors
+
 # ####### The cube at the cubie level is described by the permutation and orientations of corners and edges ############
 
 from enum import IntEnum

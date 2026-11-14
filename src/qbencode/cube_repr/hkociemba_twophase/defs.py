@@ -1,3 +1,5 @@
+# Modified on 14/11/2026 by @jawadcode to solve type errors
+
 # ###################################### Definitions and constants #####################################################
 
 from qbencode.cube_repr.hkociemba_twophase.enums import Facelet as Fc, Color as Cl

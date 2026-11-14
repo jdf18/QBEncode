@@ -1,3 +1,5 @@
+# Modified on 14/11/2026 by @jawadcode to solve type errors
+
 # #################### Symmetry-related functions. Symmetry reductions improve the performance of the solver. ##########
 import os
 from os import path
