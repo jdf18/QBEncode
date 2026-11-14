@@ -7,7 +7,10 @@ authors = [
     { name = "Jawad W. Ahmed", email = "jawad.w.ahmed@gmail.com" }
 ]
 requires-python = ">=3.15"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.4",
+    "pygame-ce>=2.5.8",
+]
 
 [project.scripts]
 qbencode = "qbencode:main"
