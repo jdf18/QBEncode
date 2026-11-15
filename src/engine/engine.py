@@ -14,9 +14,12 @@ class Engine:
     clock: Clock
     running: bool
     dt: float
+    screen_dims: pygame.Vector2
 
     camera: Camera
     entities: List[Entity]
+
+    font: pygame.Font
 
     def __init__(self) -> None:
         pass
@@ -24,16 +27,21 @@ class Engine:
     def start(self, screen_dims) -> None:
         # pygame setup
         pygame.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode(screen_dims)
         self.clock = pygame.time.Clock()
         self.running = True
+        self.screen_dims = pygame.Vector2(screen_dims)
 
         self.dt = 1e-10
 
         self.camera = Camera()
+        self.camera.screen_offset = self.screen_dims / 2
+        self.camera.screen_dims = self.screen_dims
         self.entities = []
 
     def shutdown(self) -> None:
+        pygame.font.quit()
         pygame.quit()
 
     def run(self) -> None:

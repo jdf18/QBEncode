@@ -1,5 +1,4 @@
-from os import stat
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 import pygame
 from pygame import Vector2, Vector3
@@ -58,7 +57,7 @@ class Cube(Entity):
         super().__init__()
 
         self.facelets = FaceCube()
-        self.rotation = quaternion.one
+        self.rotation = np.quaternion(0.920177575008573, -0.13131837213796, -0.364919066736363, 0.0535050495060538)
 
         self.facelet_quads = list(
             (Vector2(), Vector2(), Vector2(), Vector2())
@@ -73,6 +72,8 @@ class Cube(Entity):
         q_x = quaternion.from_rotation_vector([0, angle_x, 0])
 
         self.rotation = q_y * q_x * self.rotation
+
+        print(self.rotation)
 
     @staticmethod
     def facelet_to_face_and_let(index: Facelet) -> tuple[Color, int]:
@@ -192,15 +193,13 @@ class Cube(Entity):
             case pygame.MOUSEMOTION:
                 if pygame.mouse.get_pressed()[pygame.BUTTON_RIGHT-1] == 1:
                     rel_x, rel_y = pygame.mouse.get_rel()
-                    print(rel_x, rel_y)
                     if rel_x**2 + rel_y**2 > 15**2:
                         return
                     self.update_rotation(rel_x, rel_y)
             case pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_RIGHT:
                     pygame.mouse.get_rel()
-                    print("REL")
-                if event.button == pygame.BUTTON_LEFT:
+                elif event.button == pygame.BUTTON_LEFT:
                     x, y = event.pos
                     facelet = self.raycast(x, y)
                     if facelet is None: return
@@ -209,10 +208,12 @@ class Cube(Entity):
             case pygame.MOUSEBUTTONUP:
                 if event.button == pygame.BUTTON_RIGHT:
                     pygame.mouse.get_rel()
-                    print("REL")
 
 
     def cycle_facelet(self, index: Facelet) -> None:
+        _, let = self.facelet_to_face_and_let(index)
+        if let == 4: return
+
         c = self.facelets.f[index]
         c = (c + 1) % 6
         self.facelets.f[index] = c
