@@ -68,6 +68,9 @@ class Engine:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            
+            for entity in self.entities:
+                entity.handle_event(event)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w]:

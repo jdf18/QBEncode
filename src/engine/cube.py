@@ -1,23 +1,26 @@
 from os import stat
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 import pygame
-from pygame import Vector3
-from enum import Enum, auto
+from pygame import Vector2, Vector3
+from enum import Enum
 
 from engine import projection
 from engine import Entity
+
+import numpy as np
+import quaternion
 
 if TYPE_CHECKING:
     from typing import List
     from engine import Camera
 
 from hkociemba_twophase.face import FaceCube
-from hkociemba_twophase.enums import Color, Corner, Facelet
+from hkociemba_twophase.enums import Color, Facelet
 
 # https://www.schemecolor.com/rubik-cube-colors.php
 class CubeColour(Enum):
-    WHITE  = "0xff0000"
+    WHITE  = "0xffffff"
     RED    = "0xB90000"
     GREEN  = "0x009B48"
     YELLOW = "0xFFD500"
@@ -44,71 +47,88 @@ def face_to_colour(face) -> CubeColour:
 
 
 Quad = tuple[Vector3, Vector3, Vector3, Vector3]
+Quad2d = tuple[Vector2, Vector2, Vector2, Vector2]
 
 class Cube(Entity):
     facelets: FaceCube
+
+    facelet_quads: list[Quad2d]
 
     def __init__(self) -> None:
         super().__init__()
 
         self.facelets = FaceCube()
-        self.rotation
+        self.rotation = quaternion.one
+
+        self.facelet_quads = list(
+            (Vector2(), Vector2(), Vector2(), Vector2())
+            for _ in range(len(Facelet))
+        )
+
+    def update_rotation(self, dx: int ,dy: int, sensitivity: float=0.005) -> None:
+        angle_y = -dy * sensitivity
+        angle_x =  dx * sensitivity
+
+        q_y = quaternion.from_rotation_vector([angle_y, 0, 0])
+        q_x = quaternion.from_rotation_vector([0, angle_x, 0])
+
+        self.rotation = q_y * q_x * self.rotation
 
     @staticmethod
     def facelet_to_face_and_let(index: Facelet) -> tuple[Color, int]:
         return (Color(index // 9), index % 9)
 
-    @staticmethod
-    def get_face_points(index: Color) -> Quad:
+    def get_face_points(self, index: Color) -> Quad:
         match index:
             case Color.U:
-                return (
-                    Vector3(-1,  1, -1),
-                    Vector3( 1,  1, -1),
-                    Vector3( 1,  1,  1),
-                    Vector3(-1,  1,  1),
+                points = (
+                    Vector3(-1, -1, -1),
+                    Vector3( 1, -1, -1),
+                    Vector3( 1, -1,  1),
+                    Vector3(-1, -1,  1),
                 )
             case Color.R:
-                return (
-                    Vector3( 1,  1,  1),
-                    Vector3( 1,  1, -1),
-                    Vector3( 1, -1, -1),
+                points = (
                     Vector3( 1, -1,  1),
+                    Vector3( 1, -1, -1),
+                    Vector3( 1,  1, -1),
+                    Vector3( 1,  1,  1),
                 )
             case Color.F:
-                return (
-                    Vector3(-1,  1,  1),
-                    Vector3( 1,  1,  1),
-                    Vector3( 1, -1,  1),
+                points = (
                     Vector3(-1, -1,  1),
+                    Vector3( 1, -1,  1),
+                    Vector3( 1,  1,  1),
+                    Vector3(-1,  1,  1),
                 )
             case Color.D:
-                return (
-                    Vector3(-1, -1,  1),
-                    Vector3( 1, -1,  1),
-                    Vector3( 1, -1, -1),
-                    Vector3(-1, -1, -1),
-                )
-            case Color.L:
-                return (
-                    Vector3(-1,  1, -1),
+                points = (
                     Vector3(-1,  1,  1),
-                    Vector3(-1, -1,  1),
-                    Vector3(-1, -1, -1),
-                )
-            case Color.B:
-                return (
+                    Vector3( 1,  1,  1),
                     Vector3( 1,  1, -1),
                     Vector3(-1,  1, -1),
-                    Vector3(-1, -1, -1),
-                    Vector3( 1, -1, -1),
                 )
+            case Color.L:
+                points = (
+                    Vector3(-1, -1, -1),
+                    Vector3(-1, -1,  1),
+                    Vector3(-1,  1,  1),
+                    Vector3(-1,  1, -1),
+                )
+            case Color.B:
+                points = (
+                    Vector3( 1, -1, -1),
+                    Vector3(-1, -1, -1),
+                    Vector3(-1,  1, -1),
+                    Vector3( 1,  1, -1),
+                )
+        points = tuple(map(Vector3, iter(quaternion.rotate_vectors(self.rotation, np.array(points)))))
+        return cast(Quad, points)
 
-    @staticmethod
-    def get_facelet_points(index: Facelet) -> Quad:
+    def get_facelet_points(self, index: Facelet) -> Quad:
         colour, let = Cube.facelet_to_face_and_let(index)
 
-        face_points = Cube.get_face_points(colour)
+        face_points = self.get_face_points(colour)
 
         abs = face_points[0]
         x = (face_points[1] - abs) / 3
@@ -118,12 +138,16 @@ class Cube(Entity):
         facelet_x = let % 3
         facelet_y = let // 3
 
+        facelet_zero = 0.1
+        facelet_one = 0.9
+
         facelet_points = (
-            abs + (facelet_x * x) + ((facelet_y) * y),
-            abs + ((facelet_x+1) * x) + ((facelet_y) * y),
-            abs + ((facelet_x+1) * x) + ((facelet_y+1) * y),
-            abs + ((facelet_x) * x) + ((facelet_y+1) * y),
+            abs + ((facelet_x+facelet_zero) * x) + ((facelet_y+facelet_zero) * y),
+            abs + ((facelet_x+facelet_one)  * x) + ((facelet_y+facelet_zero) * y),
+            abs + ((facelet_x+facelet_one)  * x) + ((facelet_y+facelet_one)  * y),
+            abs + ((facelet_x+facelet_zero) * x) + ((facelet_y+facelet_one)  * y),
         )
+
         return facelet_points 
 
     def draw(self, surface: pygame.Surface, camera: Camera) -> None:
@@ -141,8 +165,9 @@ class Cube(Entity):
         colour = face_to_colour(facelets[index])
 
         project = lambda x : projection.world_to_screen_space(camera, x)
-        points = tuple(map(project, Cube.get_facelet_points(index)))
+        points: Quad2d = cast(Quad2d, tuple(map(project, self.get_facelet_points(index))))
 
+        self.facelet_quads[index] = points
         if not projection.is_culled((points[0], points[1], points[2])):
             pygame.draw.polygon(surface, pygame.Color(colour.value), points)
         return
@@ -150,6 +175,45 @@ class Cube(Entity):
     def update(self, dt: float) -> None:
         _ = dt
         return 
-        
+
+    def raycast(self, x: int, y: int) -> Optional[Facelet]:
+        for i, quad in enumerate(self.facelet_quads):
+            if projection.is_culled(cast(
+                tuple[Vector2, Vector2, Vector2],
+                tuple([quad[0], quad[1], quad[2]]))): continue
+
+            if projection.point_in_quad(Vector2(x, y), quad):
+                return Facelet(i)
+        return None
 
 
+    def handle_event(self, event: pygame.Event) -> None:
+        match event.type:
+            case pygame.MOUSEMOTION:
+                if pygame.mouse.get_pressed()[pygame.BUTTON_RIGHT-1] == 1:
+                    rel_x, rel_y = pygame.mouse.get_rel()
+                    print(rel_x, rel_y)
+                    if rel_x**2 + rel_y**2 > 15**2:
+                        return
+                    self.update_rotation(rel_x, rel_y)
+            case pygame.MOUSEBUTTONDOWN:
+                if event.button == pygame.BUTTON_RIGHT:
+                    pygame.mouse.get_rel()
+                    print("REL")
+                if event.button == pygame.BUTTON_LEFT:
+                    x, y = event.pos
+                    facelet = self.raycast(x, y)
+                    if facelet is None: return
+
+                    self.cycle_facelet(facelet)
+            case pygame.MOUSEBUTTONUP:
+                if event.button == pygame.BUTTON_RIGHT:
+                    pygame.mouse.get_rel()
+                    print("REL")
+
+
+    def cycle_facelet(self, index: Facelet) -> None:
+        c = self.facelets.f[index]
+        c = (c + 1) % 6
+        self.facelets.f[index] = c
+        return

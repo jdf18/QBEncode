@@ -8,7 +8,7 @@ engine = Engine()
 DIMS = (1280, 720)
 engine.start(DIMS)
 
-engine.camera.position = Vector3(0, 0, 10)
+engine.camera.position = Vector3(0, 0, -10)
 engine.camera.screen_dist = 100
 engine.camera.screen_offset = Vector2(DIMS) / 2
 
