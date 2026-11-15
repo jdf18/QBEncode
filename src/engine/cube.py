@@ -73,8 +73,6 @@ class Cube(Entity):
 
         self.rotation = q_y * q_x * self.rotation
 
-        print(self.rotation)
-
     @staticmethod
     def facelet_to_face_and_let(index: Facelet) -> tuple[Color, int]:
         return (Color(index // 9), index % 9)

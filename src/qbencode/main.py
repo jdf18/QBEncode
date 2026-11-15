@@ -9,6 +9,7 @@ from engine.ui.rect import UIQuad
 
 from hkociemba_twophase import face
 from hkociemba_twophase.face import FaceCube
+from hkociemba_twophase.solver import solve
 from qbencode import words
 from qbencode import coding
 
@@ -63,7 +64,7 @@ def encode():
     
     cubie = coding.decode(code)
 
-    encode_scramble.text = ""
+    encode_scramble.text = coding.inverse_moves(solve(cubie.to_facelet_cube().to_string(), max_length=30))
     encode_scramble.render()
 
     facecube = cubie.to_facelet_cube()
@@ -120,7 +121,8 @@ def decode():
     if not verified: return
 
     code = coding.encode(cube)
-    decode_text.text = words.int_to_str(code)
+    decode_result.text = words.int_to_str(code)
+    decode_result.render()
 
 decode_button.callback = decode
 engine.entities.append(decode_button)

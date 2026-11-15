@@ -72,8 +72,9 @@ class UITextbox(Entity):
                         self.callback()
                 else:
                     char = str(event.unicode)
-                    if (char.isalpha() or (char in " -!")) and char.islower():
+                    if (char.isalpha() and char.islower()) or (char in " -!"):
                         self.text.text = self.text.text + char
+                        print(self.text.text)
                     else: 
                         return
                 
