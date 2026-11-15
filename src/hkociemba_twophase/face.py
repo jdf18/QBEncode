@@ -1,3 +1,5 @@
+# Modified on 14/11/2026 by @jawadcode to solve type errors
+
 # ####### The cube at the facelet level is described by the positions of its colored stickers. ########################
 
 from hkociemba_twophase import cubie

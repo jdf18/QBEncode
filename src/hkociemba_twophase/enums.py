@@ -1,3 +1,5 @@
+# Modified on 14/11/2026 by @jawadcode to solve type errors
+
 # Enumerations used throughout the solver to improve code readability.
 
 from enum import IntEnum
