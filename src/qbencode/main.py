@@ -10,6 +10,7 @@ from engine.ui.rect import UIQuad
 from hkociemba_twophase import face
 from hkociemba_twophase.face import FaceCube
 from qbencode import words
+from qbencode import coding
 
 COLOUR_BACKGROUND = Color("0x111111")
 COLOUR_TEXT = Color("0xffffff")
@@ -60,11 +61,12 @@ def encode():
         print("Invalid code. Choose three words from the word list")
         return
     
-    cubie = foo(code)
+    cubie = coding.decode(code)
 
     encode_scramble.text = ""
     encode_scramble.render()
 
+    facecube = cubie.to_facelet_cube()
     cube_obj.facelets = facecube
 
 encode_button.callback = encode
@@ -115,8 +117,9 @@ def decode():
     cube = facecube.to_cubie_cube()
 
     verified = (cube.verify() == True)
+    if not verified: return
 
-    code = bar(cube)
+    code = coding.encode(cube)
     decode_text.text = words.int_to_str(code)
 
 decode_button.callback = decode
