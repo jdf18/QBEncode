@@ -177,7 +177,7 @@ class CubieCube:
         else:
             self.co = co[:]
         if ep is None:
-            self.ep = [Ed(i) for i in range(12)]
+            self.ep = [i for i in range(12)]
         else:
             self.ep = ep[:]
         if eo is None:
@@ -260,7 +260,7 @@ class CubieCube:
             e_perm[e] = self.ep[b.ep[e]]
             e_ori[e] = (b.eo[e] + self.eo[b.ep[e]]) % 2
         for e in Ed:
-            self.ep[e] = Ed(e_perm[e])
+            self.ep[e] = e_perm[e]
             self.eo[e] = e_ori[e]
 
     def multiply(self, b):
@@ -371,12 +371,12 @@ class CubieCube:
         other_edge = [Ed.UR, Ed.UF, Ed.UL, Ed.UB, Ed.DR, Ed.DF, Ed.DL, Ed.DB]
         a = idx  # Location
         for e in Ed:
-            self.ep[e] = Ed(-1)  # Invalidate all edge positions
+            self.ep[e] = -1  # Invalidate all edge positions
 
         x = 4  # set slice edges
         for j in Ed:
             if a - c_nk(11 - j, x) >= 0:
-                self.ep[j] = Ed(slice_edge[4 - x])
+                self.ep[j] = slice_edge[4 - x]
                 a -= c_nk(11 - j, x)
                 x -= 1
 
@@ -413,7 +413,7 @@ class CubieCube:
         b = idx % 24  # Permutation
         a = idx // 24  # Location
         for e in Ed:
-            self.ep[e] = Ed(-1)  # Invalidate all edge positions
+            self.ep[e] = -1  # Invalidate all edge positions
 
         j = 1  # generate permutation from index b
         while j < 4:
@@ -467,7 +467,7 @@ class CubieCube:
         b = idx % 24  # Permutation
         a = idx // 24  # Location
         for e in Ed:
-            self.ep[e] = Ed(-1)  # Invalidate all edge positions
+            self.ep[e] = -1  # Invalidate all edge positions
 
         j = 1  # generate permutation from index b
         while j < 4:
@@ -523,7 +523,7 @@ class CubieCube:
         b = idx % 24  # Permutation
         a = idx // 24  # Location
         for e in Ed:
-            self.ep[e] = Ed(-1)  # Invalidate all edge positions
+            self.ep[e] = -1  # Invalidate all edge positions
 
         j = 1  # generate permutation from index b
         while j < 4:

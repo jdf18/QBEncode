@@ -1,17 +1,16 @@
-from ast import TypeVar
-from functools import reduce
+import itertools
 from math import factorial
-from typing import Literal
 
 from hkociemba_twophase import cubie
 from hkociemba_twophase.cubie import CubieCube
 from hkociemba_twophase.enums import Color, Corner, Edge
+from hkociemba_twophase.solver import SolverThread, solve
 
 
 # The lehmer code is a way to encode a permutation of n numbers
-def lehmer(perms: list[int]) -> list[int]:
-    n = len(perms)
-    return [sum(1 for j in range(i + 1, n) if perms[j] < perms[i]) for i in range(n)]
+def lehmer(perm: list[int]) -> list[int]:
+    n = len(perm)
+    return [sum(1 for j in range(i + 1, n) if perm[j] < perm[i]) for i in range(n)]
 
 
 # Since it's a bijective mapping, we can turn lehmer digits back into the specific original permutation
@@ -31,71 +30,146 @@ def unlehmer(digits: list[int]) -> list[int]:
 
 
 def encode(cube: CubieCube) -> int:
-    cpdigs = lehmer([perm.value for perm in cube.cp])
+    corner_perm_digits = lehmer([perm for perm in cube.cp])
 
     # Use horner's method
-    cp_idx = 0
+    corner_perm_index = 0
     for i in range(8):
-        cp_idx = cp_idx * (8 - i) + cpdigs[i]
+        corner_perm_index = corner_perm_index * (8 - i) + corner_perm_digits[i]
 
-    epdigs = lehmer([perm.value for perm in cube.ep])
-    ep_idx = 0
+    edge_perm_digits = lehmer([perm for perm in cube.ep])
+    edge_perm_index = 0
     for i in range(10):
-        ep_idx = ep_idx * (12 - i) + epdigs[i]
+        edge_perm_index = edge_perm_index * (12 - i) + edge_perm_digits[i]
 
+    # A trinary number where each digit is a corner orientation (a twist)
     twist = 0
     for t in cube.co[:7]:
         twist = twist * 3 + int(t)
+    # Just a binary number where each digit is an edge orientation (a flip)
     flip = 0
     for f in cube.eo[:11]:
         flip = flip * 2 + int(f)
 
-    res = cp_idx
+    res = corner_perm_index
     res = res * 3**7 + twist
-    res = res * (factorial(12) // 2) + ep_idx
+    res = res * (factorial(12) // 2) + edge_perm_index
     res = res * 2**11 + flip
     return res
 
 
 def decode(n: int) -> CubieCube:
     n, flip = divmod(n, 2**11)
-    n, ep_idx = divmod(n, factorial(12) // 2)
-    cp_idx, twist = divmod(n, 3**7)
+    n, edge_perm_index = divmod(n, factorial(12) // 2)
+    corner_perm_index, twist = divmod(n, 3**7)
 
-    # corners
-    cdig = [0] * 8
+    corner_perm_digits = [0] * 8
     for i in reversed(range(8)):
-        cp_idx, cdig[i] = divmod(cp_idx, 8 - i)
-    cp = unlehmer(cdig)
-    cpar = sum(cdig) % 2
+        corner_perm_index, corner_perm_digits[i] = divmod(corner_perm_index, 8 - i)
+    corner_perm = unlehmer(corner_perm_digits)
+    corner_parity = sum(corner_perm_digits) % 2
 
     # edges: rebuild forced digit from corner parity
-    edig = [0] * 12
+    edge_perm_digits = [0] * 12
     for i in reversed(range(10)):
-        ep_idx, edig[i] = divmod(ep_idx, 12 - i)
-    edig[10] = (cpar - sum(edig[:10])) % 2
-    edig[11] = 0
-    ep = unlehmer(edig)
+        edge_perm_index, edge_perm_digits[i] = divmod(edge_perm_index, 12 - i)
+    edge_perm_digits[10] = (corner_parity - sum(edge_perm_digits[:10])) % 2
+    edge_perm_digits[11] = 0
+    edge_perm = unlehmer(edge_perm_digits)
 
     # orientations: last one fixed by the sum constraint
-    co = [0] * 8
+    corner_orient = [0] * 8
     for i in reversed(range(7)):
-        twist, co[i] = divmod(twist, 3)
-    co[7] = (-sum(co[:7])) % 3
-    eo = [0] * 12
+        twist, corner_orient[i] = divmod(twist, 3)
+    corner_orient[7] = (-sum(corner_orient[:7])) % 3
+
+    edge_orient = [0] * 12
     for i in reversed(range(11)):
-        flip, eo[i] = divmod(flip, 2)
-    eo[11] = sum(eo[:11]) % 2
+        flip, edge_orient[i] = divmod(flip, 2)
+    edge_orient[11] = sum(edge_orient[:11]) % 2
 
-    return CubieCube(cp=[Corner(i) for i in cp], co=co, ep=[Edge(i) for i in ep], eo=eo)
+    return CubieCube(
+        cp=[Corner(i) for i in corner_perm],
+        co=corner_orient,
+        ep=[Edge(i) for i in edge_perm],
+        eo=edge_orient,
+    )
 
 
-cube = CubieCube()
-cube.multiply(cubie.basicMoveCube[Color.D])
-encoded = encode(cube)
-newcube = decode(encoded)
-print(newcube.to_facelet_cube().to_2dstring())
+def load_words() -> list[str]:
+    with open("durhack_word_list.csv", "r") as f:
+        return f.read().splitlines()
 
+
+def test():
+    c = CubieCube()
+    c.multiply(cubie.basicMoveCube[Color.U])
+    solution = solve(c.to_facelet_cube().to_string(), max_length=30)
+    print(solution)
+    # Now we need to invert this to get the original scramble
+
+
+def inverse_moves(moves: str) -> str:
+    res: list[str] = []
+    moves_list = moves.split()
+    moves_list.pop()  # Remove the (20f) stuff
+    for move in moves_list:
+        dir = move[0]
+        if len(move) > 1:
+            if move[1] == "1":
+                res.append(dir + "'")
+            # elif move[1] == "'":
+            #     res.append(dir)
+            elif move[1] == "2":
+                res.append(move)
+            elif move[1] == "3":
+                res.append(dir)
+        else:
+            res.append(dir + "'")
+
+    return " ".join(reversed(res))
+
+
+def process_moves(moves: str) -> str:
+    res: list[str] = []
+    moves_list = moves.split()
+    moves_list.pop()  # Remove the (20f) stuff
+    for move in moves_list:
+        dir = move[0]
+        if len(move) > 1:
+            if move[1] == "1":
+                res.append(dir)
+            elif move[1] == "2":
+                res.append(move)
+            elif move[1] == "3":
+                res.append(dir + "'")
+        else:
+            res.append(move)
+
+    return " ".join(res)
+
+
+if __name__ == "__main__":
+    c = CubieCube()
+    c.randomize()
+    solution = solve(c.to_facelet_cube().to_string(), max_length=30)
+
+    print("Scramble: ", inverse_moves(solution))
+    print("Solution: ", process_moves(solution))
+
+# cube = CubieCube()
+# cube.multiply(cubie.basicMoveCube[Color.D])
+# encoded = encode(cube)
+# newcube = decode(1)
+# print(newcube.to_facelet_cube().to_2dstring())
+
+# for _ in range(1000):
+#     c = CubieCube()
+#     c.randomize()
+#     d = decode(encode(c))
+#     assert (d.cp, d.co, d.ep, d.eo) == (c.cp, c.co, c.ep, c.eo)
+
+# === OLD FAILED REPRESENTATION ===
 # # Is an 8-tuple
 # CornerPerms = tuple[Literal[0, 1, 2], ...]
 
