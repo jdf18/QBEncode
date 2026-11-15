@@ -57,7 +57,7 @@ class Cube(Entity):
         super().__init__()
 
         self.facelets = FaceCube()
-        self.rotation = quaternion.one
+        self.rotation = np.quaternion(0.920177575008573, -0.13131837213796, -0.364919066736363, 0.0535050495060538)
 
         self.facelet_quads = list(
             (Vector2(), Vector2(), Vector2(), Vector2())
@@ -72,6 +72,8 @@ class Cube(Entity):
         q_x = quaternion.from_rotation_vector([0, angle_x, 0])
 
         self.rotation = q_y * q_x * self.rotation
+
+        print(self.rotation)
 
     @staticmethod
     def facelet_to_face_and_let(index: Facelet) -> tuple[Color, int]:

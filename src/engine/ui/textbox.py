@@ -26,6 +26,7 @@ class UITextbox(Entity):
         self.size = size
         self.callback = None
         self.bg_colour = bg_colour
+        self.bg_colour_active = pygame.Color("0x555555")
         self.text_colour = text_colour
 
         self.button = UIButton(self.pos, self.size, self.bg_colour)
@@ -48,6 +49,11 @@ class UITextbox(Entity):
     def update(self, dt: float) -> None:
         self.button.update(dt)
         self.text.update(dt)
+
+        if self.active.value:
+            self.button.colour = self.bg_colour_active
+        else:
+            self.button.colour = self.bg_colour
         return 
 
     def handle_event(self, event: pygame.Event) -> None:
