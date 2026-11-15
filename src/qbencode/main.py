@@ -59,7 +59,10 @@ def encode():
 
     code = words.str_to_int(user_text)
     if code is None:
-        print("Invalid code. Choose three words from the word list")
+        encode_scramble.colour = Color("0xee0000")
+        encode_scramble.text = "Invalid code. Choose three words from the word list"
+        encode_scramble.render()
+        encode_scramble.colour = COLOUR_TEXT
         return
     
     cubie = coding.decode(code)
@@ -117,8 +120,13 @@ def decode():
     facecube: FaceCube = cube_obj.facelets
     cube = facecube.to_cubie_cube()
 
-    verified = (cube.verify() == True)
-    if not verified: return
+    v = cube.verify()
+    verified = (v == True)
+    if not verified: 
+        decode_result.text = v
+        decode_result.render()
+
+        return
 
     code = coding.encode(cube)
     decode_result.text = words.int_to_str(code)

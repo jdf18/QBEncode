@@ -21,6 +21,13 @@ def str_to_int(inp: str) -> Optional[int]:
 
     words = get_words()
 
+    if w1 not in words: 
+        return None
+    if w2 not in words:
+        return None
+    if w3 not in words:
+        return None
+
     c1 = words.index(w1)
     c2 = words.index(w2)
     c3 = words.index(w3)
