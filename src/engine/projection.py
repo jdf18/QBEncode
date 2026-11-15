@@ -4,6 +4,7 @@ class Camera:
     position: Vector3
     screen_dist: float
     screen_offset: Vector2
+    screen_dims: Vector2
 
     def __init__(self) -> None:
         self.position = Vector3(0, 0, 0)
