@@ -13,3 +13,9 @@ class Responsive2D:
     def value(self, camera: Camera) -> Vector2:
         return Vector2(camera.screen_dims[0] * self.mult[0],
                        camera.screen_dims[1] * self.mult[1],) + self.offset
+
+    def __add__(self, other: Responsive2D) -> Responsive2D:
+        return Responsive2D(
+            self.mult + other.mult,
+            self.offset + other.offset,
+        )
